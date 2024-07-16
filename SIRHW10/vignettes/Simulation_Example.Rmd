@@ -1,0 +1,118 @@
+---
+title: "An Introduction to Simulating a Susceptible Infected Removed Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SIR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+The following vignette introduces how to use the `SIR` package. This includes
+
+-   How to create an SIR Model with only infected corners using `infected_corners()` or random infections throughout the matrix with `random_infections()`
+
+-   Plotting a visual of the SIR Matrix using `plot()`
+
+-   Simulating an Infection Step on an SIR Matrix using `step()`
+
+-   Simulating an Entire Infection on an SIR Matrix with `simulate_sir()`
+
+#### SIR Matrix
+
+Before we being with introducing each of the functions, the SIR Model needs to be explained. SIR stands for Susceptible Infected and Removed. The model is created using a matrix of the user's choice made up of 0's, 1's, and 2's with each of the values representing a different item within the matrix. The purpose of the model is to simulate an infection within a susceptible population. It allows for the user to see how long it takes for a disease to spread within a population with a couple of varying factors. These factors include: the population size, probability of infection, and areas of initial infection. Depending on how these factors are manipulated during the creation of the SIR Matrix can have a drastically big difference on the outcome and the steps leading to the final outcome.
+
+An SIR matrix is made up of 0's for susceptible cells, 1's for infected cells and 2's for removed cells. Susceptible cells are those that have not been infected and still can be infected. Once a cell is infected it has a probability p of infecting the eight neighboring susceptible cells that surround it but depending on how high the probability is only some, not all of the cells will become infected. From there the cell that passed on the infection will now be considered removed from the model and can no longer become susceptible or reinfected. The SIR model simulates a real life situation of a disease spreading around a populaiton till everybody is infected or the infection dies out.
+
+#### Installing SIR Package
+
+To begin with using the SIR package, it first needs to be installed on your device. Once the package is installed, it can be loaded in your R session by calling `library(SIR)` in the console or in a r chunk as seen below
+
+```{r setup}
+library(SIR)
+```
+
+#### Creating an SIR Matrix
+
+The main component of using the SIR Matrix is creating an SIR Matrix. A starting matrix can be made up of any number of rows or columns depending on the User's need. An SIR Matrix is made up of 3 possible values: 0,1, or 2 with these values representing the following:
+
+-   0 - Susceptible
+
+-   1 - Infected
+
+-   2 - Removed
+
+##### Infecting only the Corners of the Matrix
+
+If the user wants to create an SIR Matrix in which only the corners of the matrix are infected, the user may use the infect_corners() function as seen below. The infect_corner matrix takes in two parameters: `nrow` and `ncol`
+
+```{r infect_corners()}
+c0 <- infect_corners()
+c0
+```
+
+When calling the infect_corners() without adding in any arguments for the number of rows or columns desired for the SIR Matrix, the function defaults to creating a matrix with 6 rows and 10 columns. Regardless of the size of the matrix, the infections stay bounded to only the corners points of the matrix. If the user does not want the infections to be limited to the corners of the matrix and instead wants infections scattered randomly throughout the SIR matrix, they can instead call the random_infect() function.
+
+##### Random Infections within an SIR Matrix
+
+The random_infect() has three parameters: `nrow`, `ncol`, and `prob`. `nrow` and `ncol` determine the number of rows and columns the matrix is going to have respectively. `prob` determines the probability each cell within the matrix created is going to be infected. The random_infect() function has default parameters set so when it is called as seen below.
+
+```{r random_infect}
+x0 <- random_infect()
+
+
+```
+
+The function defaults to creating a six by ten matrix with each cell in the matrix having a .1 probability of infection. With that being said the user can input any number of `nrow` or `ncol` without running into potential errors. For prob the user needs to input a number between zero and one for the model to work as planned as probabilities cannot be lower than zero nor higher than one. For example the below call of `random_infect()` calls for a ten by eight matrix to be created where each cell within the matrix has a one-in-four chance of becoming infected.
+
+```{r}
+x0 <- random_infect(nrow = 10, ncol = 8, prob = .25)
+x0
+```
+
+##### Plotting the Image of an SIR Matrix
+
+The second most important aspect of being able to create an SIR Model is being able to plot the model in a way that a user can look and understand what is going on with the matrix. The `plot()` function accepts as many arguments as are put through but for the purpose of the SIR package the main component is having a matrix with the class SIRmatrix. This class is already given to matrix created using the `random_infect()` function or the `infect_corners()` function. When using matrix with the SIRmatrix class it allow for the `plot()` function to work specificially for SIR matrices. An example of plot for an SIRmatrix function is seen below.
+
+```{r plot}
+plot(c0)
+```
+
+In this example, the `plot()` creates a variable that stores a sequence of the number of rows within c0. After a second matrix is created to store the transpose of the reverse of all the rows in the matrix inputted into `plot()`. Finally it gives the image of the second matrix for the user to view the current status of their SIR Matrix.
+
+##### Preforming a Single Infection Step Matrix
+
+The `step()` function is used when the user wants to preform a single infection step to their SIR Matrix. It has two parameters: `x` which represents the inputted matrix and `prob` which represents the probability of infection. A single infection step allows those cells that are infected the opportunity to infect the eight neighboring cells. One thing that is important to mention is that there is no guarantee that the neighboring cells will get infected in the very next step, it is dependent on the probability of infection called in by the user. The default probability of infection is set to .125 meaning that for an infected cell, each of the neighboring susceptible cells has a .125 chance of getting infected. Once the neighboring cells that were going to get infected in that step get infected, the function then sets the original infections to the value 2, meaning they are no longer infected and are instead removed. When they are removed they can no longer infect other cells and cannot be reinfected by infected cells.
+
+```{r step}
+x0
+x1 <- step(x0)
+
+```
+
+##### Running an Entire Infection Simulation on an SIR Matrix
+
+`simulate_sir()` does more than run just a single step(). The simulate_sir() function runs `step()` function on the SIRmatrix on a while loop until there are no longer any active infections within the matrix. While the loop is being run, there is a counter within the loop that keeps track of how many times a step is preformed. Once there is no more active infections within the matrix, the function returns a list containing the following
+
+-   `x` - the final remaining matrix with no active infections
+
+-   `count` - the number of step iterations for there to be no more active infections
+
+-   `prob` - the probability of infection
+
+-   `prop_infected` - the proportion of cells that were infected at same point in comparsion to the total number of cells.
+
+The `simulate_sir()` function has two parameters: `x` which is the starting SIR matrix and `prob` which is the probability of infection
+
+```{r}
+c1 <- simulate_sir(c0)
+c1
+```
